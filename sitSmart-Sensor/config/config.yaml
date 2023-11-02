@@ -1,0 +1,19 @@
+# config/config.yaml
+
+# Define your dataset parameters
+dataset:
+  data_dir: /path/to/your/dataset
+
+train_batch_size: 32
+val_batch_size: 64
+num_workers: 4  # Adjust as needed
+patience: 5
+log_dir: ./logs
+
+# Define model parameters if needed
+model:
+  # Add model-specific configuration options here
+
+# Training parameters
+train:
+  max_epochs: 50  # Change to your desired number of epochs
