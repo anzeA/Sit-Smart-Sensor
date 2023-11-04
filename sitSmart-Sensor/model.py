@@ -13,9 +13,12 @@ torch.set_float32_matmul_precision('high')
 
 
 class SitSmartModel(L.LightningModule):
-    def __init__(self):
+    def __init__(self,lr,weight_decay,**kwargs):
         super().__init__()
         self.transform = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        self.lr = lr
+        self.weight_decay = weight_decay
+
         self.resnet = models.resnet18(weights='DEFAULT')
         num_ftrs = self.resnet.fc.in_features
 
@@ -41,9 +44,9 @@ class SitSmartModel(L.LightningModule):
         return torch.sigmoid(emb)[..., 0]
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.resnet.fc.parameters(), lr=1e-3, weight_decay=1e-2)
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[50, 150, 200], gamma=0.1, verbose=True)
-        return [optimizer], [scheduler]
+        optimizer = torch.optim.AdamW(self.resnet.fc.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, verbose=False, mode='min',factor=0.1,)
+        return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "val_loss"}
 
     def training_step(self, batch, batch_idx):
         # "batch" is the output of the training data loader.
@@ -56,6 +59,7 @@ class SitSmartModel(L.LightningModule):
         self.metrics_train(preds, labels.to(self.device))
         # Logs the accuracy per epoch to tensorboard (weighted average over batches)
         self.log("train_loss", loss, on_step=True, on_epoch=False, prog_bar=True, logger=True)
+        self.log('lr', self.trainer.optimizers[0].param_groups[0]['lr'], on_step=True, on_epoch=False, prog_bar=True)
         self.log_dict(self.metrics_train, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         return loss  # Return tensor to call ".backward" on
 
