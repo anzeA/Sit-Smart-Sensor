@@ -2,18 +2,25 @@
 
 # Define your dataset parameters
 dataset:
-  data_dir: /path/to/your/dataset
+  root: C:\Users\anzea\GitRepositories\SitSmart-Sensor\data # Change to your data directory
+  rotation: 10
+  brightness: 0.1
+  contrast: 0.1
+  saturation: 0.1
+  hue: 0.1
 
 train_batch_size: 32
 val_batch_size: 64
-num_workers: 4  # Adjust as needed
+num_workers: 8
 patience: 5
-log_dir: ./logs
+log_dir: C:\Users\anzea\GitRepositories\SitSmart-Sensor\logs # Change to your log directory
 
 # Define model parameters if needed
 model:
   # Add model-specific configuration options here
-
+  lr : 0.001
+  weight_decay: 0.01
 # Training parameters
 train:
-  max_epochs: 50  # Change to your desired number of epochs
+  max_epochs: 100  # Change to your desired number of epochs
+  log_every_n_steps: 5
