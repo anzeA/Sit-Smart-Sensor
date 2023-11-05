@@ -8,6 +8,10 @@ from torchvision import transforms
 
 from playsound import playsound
 from model import SitSmartModel
+
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 class RollingAverage:
     def __init__(self, time_span):
         self.time_span = time_span
@@ -92,7 +96,7 @@ class Sensor:
 
                 if probability_avg is not None:
                     text_avg = f'Score: {int(100*probability_avg)}%'
-                    color = (0, int(255 * probability), int(255 * (1 - probability)))
+                    color = (0, int(255 * probability_avg), int(255 * (1 - probability_avg)))
                     cv2.putText(frame, text_avg, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
                 cv2.imshow('SitSmart Demo', frame)
             if probability_avg and probability_avg < 0.1 and self.sound_path is not None:
@@ -121,7 +125,8 @@ class Sensor:
         with torch.no_grad():
             frame = frame.unsqueeze(0)
             probability = self.model(frame)
-            return probability.item()
+
+        return probability.item()
 
     def get_image(self):
 

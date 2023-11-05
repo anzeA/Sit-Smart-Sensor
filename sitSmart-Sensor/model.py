@@ -3,11 +3,8 @@ import torch
 import torch.nn as nn
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from torchmetrics import MetricCollection
-# PyTorch
-# Torchvision
 from torchmetrics.classification import BinaryAccuracy, BinaryF1Score, BinaryAUROC
-# from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
-from torchvision import transforms, models, datasets
+from torchvision import transforms, models
 
 torch.set_float32_matmul_precision('high')
 
@@ -19,10 +16,11 @@ class SitSmartModel(L.LightningModule):
         self.lr = lr
         self.weight_decay = weight_decay
 
-        self.resnet = models.resnet18(weights='DEFAULT')
-        num_ftrs = self.resnet.fc.in_features
+        self.model = models.resnet18(weights='DEFAULT')
+        #model = models.mobilenet_v3_large()
+        num_ftrs = self.model.fc.in_features
 
-        self.resnet.fc = nn.Linear(num_ftrs, 1)
+        self.model.fc = nn.Linear(num_ftrs, 1)
         self.loss_module = nn.BCELoss()
         self.metrics_train = self._create_metrics("_train")
         self.metrics_test = self._create_metrics("_test")
@@ -40,11 +38,11 @@ class SitSmartModel(L.LightningModule):
         # Forward function that is run when visualizing the graph
 
         imgs = self.transform(imgs)
-        emb = self.resnet(imgs)
+        emb = self.model(imgs)
         return torch.sigmoid(emb)[..., 0]
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.resnet.fc.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        optimizer = torch.optim.AdamW(self.model.fc.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, verbose=False, mode='min',factor=0.5,)
         return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "val_loss"}
 
