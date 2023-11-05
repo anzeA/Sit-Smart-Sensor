@@ -45,7 +45,7 @@ class SitSmartModel(L.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.resnet.fc.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, verbose=False, mode='min',factor=0.1,)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, verbose=False, mode='min',factor=0.5,)
         return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "val_loss"}
 
     def training_step(self, batch, batch_idx):

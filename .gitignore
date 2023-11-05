@@ -162,3 +162,4 @@ lightning_logs/
 ```
 data/
 .idea/
+logs/
