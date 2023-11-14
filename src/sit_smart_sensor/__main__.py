@@ -26,7 +26,7 @@ def main(cfg):
     model = SitSmartModel(**cfg.model)
     model.load_state_dict(state_dict=torch.load(cfg.run.model_path) ['state_dict'])
     print('Model loaded successfully')
-    print('Star sensor....')
+    print('Start sensor....')
     sensor = Sensor(model = model, **cfg.run)
     sensor.run()
 
