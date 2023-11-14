@@ -1,0 +1,11 @@
+torch
+torchvision
+lightning
+opencv-python
+hydra-core
+numpy
+tensorboardx
+torchmetrics
+ax-platform
+playsound==1.2.2
+grad-cam
