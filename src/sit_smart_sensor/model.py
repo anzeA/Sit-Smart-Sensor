@@ -13,12 +13,12 @@ torch.set_float32_matmul_precision('high')
 
 
 class SitSmartModel(L.LightningModule):
-    def __init__(self, train_n_layers: int = 1, backbone: str = 'resnet50', lr: float = 1e-3,
+    def __init__(self, train_n_layers: int = 1, model_name: str = 'resnet50', lr: float = 1e-3,
                  weight_decay: float = 1e-6, patience: int = 5, reduce_factor: float = 0.5, **kwargs):
         super().__init__()
         # check types
         assert isinstance(train_n_layers, int), f"train_n_layers must be an integer, but got {type(train_n_layers)}"
-        assert isinstance(backbone, str), f"backbone must be a string, but got {type(backbone)}"
+        assert isinstance(model_name, str), f"backbone must be a string, but got {type(model_name)}"
         assert isinstance(lr, float), f"lr must be a float, but got {type(lr)}"
         assert isinstance(weight_decay, float), f"weight_decay must be a float, but got {type(weight_decay)}"
         assert isinstance(patience, int), f"patience must be an integer, but got {type(patience)}"
@@ -30,15 +30,15 @@ class SitSmartModel(L.LightningModule):
         self.train_n_layers = train_n_layers
         self.patience = patience
         self.reduce_factor = reduce_factor
-        self.backbone_name = backbone
-        if backbone == 'resnet18':
+        self.model_name = model_name
+        if model_name == 'resnet18':
             self.backbone = models.resnet18(weights='DEFAULT')
-        elif backbone == 'resnet34':
+        elif model_name == 'resnet34':
             self.backbone = models.resnet34(weights='DEFAULT')
-        elif backbone == 'resnet50':
+        elif model_name == 'resnet50':
             self.backbone = models.resnet50(weights='DEFAULT')
         else:
-            raise ValueError(f"backbone {backbone} not supported. Only resnet18, resnet34 and resnet50 are supported.")
+            raise ValueError(f"model_name {model_name} not supported. Only resnet18, resnet34 and resnet50 are supported.")
 
         num_filters = self.backbone.fc.in_features
         layers = list(self.backbone.children())[:-1]
