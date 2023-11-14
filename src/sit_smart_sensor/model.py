@@ -13,7 +13,7 @@ torch.set_float32_matmul_precision('high')
 
 
 class SitSmartModel(L.LightningModule):
-    def __init__(self, train_n_layers: int = 1, model_name: str = 'resnet50', lr: float = 1e-3,
+    def __init__(self, train_n_layers: int = 1, model_name: str = 'resnet34', lr: float = 1e-3,
                  weight_decay: float = 1e-6, patience: int = 5, reduce_factor: float = 0.5, **kwargs):
         super().__init__()
         # check types
