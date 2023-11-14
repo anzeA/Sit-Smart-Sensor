@@ -44,7 +44,7 @@ train:
 model:
   lr : 0.0005
   weight_decay: 1e-5 #
-  model_name: resnet18 # Model name. Valid values are resnet18, resnet34, resnet50
+  model_name: resnet34 # Model name. Valid values are resnet18, resnet34, resnet50
   patience: 5 # Number of epochs to wait before reducing learning rate. And 2*number of epochs to wait before early stopping
   reduce_factor: 0.5 # Factor by which learning rate will be reduced
   train_n_layers: 1 # Number of convolutional blocks to train. 0 means train only classification layer
@@ -52,7 +52,7 @@ model:
 run:
   sound_path : ${root_dir}/assets/sound.mp3 # Path to sound file to be played when bad posture is detected. Supported formats are mp3 and wav. If none is provided, no sound will be played
   size: ${size}
-  model_path: ${root_dir}/models/model.ckpt # Path to model checkpoint
+  model_path: ${root_dir}/models/resnet34.ckpt # Path to model checkpoint
   time_span: 30 # Time span in seconds for which the posture should be bad to trigger an alert
   min_samples: 100 # Minimum number of samples in the time span for which the posture should be bad to trigger an alert
   show: True # Set to True to show the video feed
