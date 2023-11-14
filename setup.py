@@ -8,18 +8,17 @@ setup(
     package_dir={
         '': 'src',
     },
-    requires=[
+    install_requires=[
         "torch",
         "torchvision",
-        "lightning"
+        "lightning",
         "opencv-python",
         "hydra-core",
         "numpy",
         "tensorboardx",
         "torchmetrics",
         "ax-platform",
-        "playsound == 1.2.2",
+        "playsound <= 1.2.2",
         "grad-cam"
-
     ]
 )
