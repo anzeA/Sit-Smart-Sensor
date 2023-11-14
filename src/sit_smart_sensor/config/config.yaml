@@ -59,3 +59,4 @@ run:
   camera_index: 0 # Index of the camera to use. 0 means use the default camera
   explain: False # Set to True to show the heatmap produced by EigenCAM
   sleep_time: 0 # Time in seconds to sleep between each frame. Set to 0 to disable. This is useful when running on CPU
+  device: auto # Device to use. Valid values are auto, cpu, cuda, mps.
