@@ -160,6 +160,8 @@ cython_debug/
 #.idea/
 lightning_logs/
 ```
-data/
+data/negative
+data/positive
+data/no_person
 .idea/
 logs/
