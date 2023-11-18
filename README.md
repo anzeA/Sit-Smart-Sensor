@@ -1,7 +1,7 @@
 
 # Sit Smart Sensor
-![Test](https://github.com/anzeA/Sit-Smart-Sensor/actions/workflows/python-app.yml/badge.svg)
-![](https://github.com/anzeA/Sit-Smart-Sensor/assets/demo.gif)
+![](https://github.com/anzeA/Sit-Smart-Sensor/actions/workflows/python-app.yml/badge.svg)
+![](https://github.com/anzeA/Sit-Smart-Sensor/blob/main/assets/demo.gif)
 ## Why Sit Smart Sensor?
 
 The Sit Smart Sensor project aims to address the issue of neck and back pain caused by incorrect sitting posture while working in front of a computer. The project offers a solution to help individuals maintain proper posture by providing real-time feedback and alerts to encourage healthy sitting habits.
