@@ -1,6 +1,7 @@
 
 # Sit Smart Sensor
 ![](https://github.com/anzeA/Sit-Smart-Sensor/actions/workflows/python-app.yml/badge.svg)
+
 ![](https://github.com/anzeA/Sit-Smart-Sensor/blob/main/assets/demo.gif)
 ## Why Sit Smart Sensor?
 
