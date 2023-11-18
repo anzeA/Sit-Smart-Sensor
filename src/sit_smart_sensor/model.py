@@ -14,7 +14,7 @@ torch.set_float32_matmul_precision('high')
 
 class SitSmartModel(L.LightningModule):
     def __init__(self, train_n_layers: int = 1, model_name: str = 'resnet34', lr: float = 1e-3,
-                 weight_decay: float = 1e-6, patience: int = 5, reduce_factor: float = 0.5, **kwargs):
+                 weight_decay: float = 1e-6, patience: int = 5, reduce_factor: float = 0.5,dropout_rate:float=0., **kwargs):
         super().__init__()
         # check types
         assert isinstance(train_n_layers, int), f"train_n_layers must be an integer, but got {type(train_n_layers)}"
@@ -23,7 +23,7 @@ class SitSmartModel(L.LightningModule):
         assert isinstance(weight_decay, float), f"weight_decay must be a float, but got {type(weight_decay)}"
         assert isinstance(patience, int), f"patience must be an integer, but got {type(patience)}"
         assert isinstance(reduce_factor, float), f"reduce_factor must be a float, but got {type(reduce_factor)}"
-
+        assert isinstance(dropout_rate, float), f"dropout_rate must be a float, but got {type(dropout_rate)}"
         self.transform = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         self.lr = lr
         self.weight_decay = weight_decay
@@ -41,13 +41,27 @@ class SitSmartModel(L.LightningModule):
             raise ValueError(f"model_name {model_name} not supported. Only resnet18, resnet34 and resnet50 are supported.")
 
         num_filters = self.backbone.fc.in_features
-        layers = list(self.backbone.children())[:-1]
-        train_idx = len(layers) - self.train_n_layers - 1  # -1 for global average pooling
-        self.backbone = nn.Sequential(*layers[:train_idx])
-        num_target_classes = 3
-        self.classifier = nn.Sequential(
-            *(layers[train_idx:] + [nn.Flatten(), nn.Linear(num_filters, num_target_classes)]))
+        layers = list(self.backbone.children())[:-1] # remove fc layer
 
+        self.backbone = nn.Sequential(*layers)
+        num_target_classes = 3
+
+        # freeze batch norms
+        #for m in self.backbone.modules():
+        #    if isinstance(m, nn.BatchNorm2d):
+        #        m.track_running_stats = False # freeze running stats
+
+
+        clf_layer = [nn.Flatten(),nn.Dropout(dropout_rate)]
+        for i in range(train_n_layers):
+            clf_layer.append(nn.Linear(num_filters, num_filters))
+            clf_layer.append(nn.Dropout(dropout_rate))
+            clf_layer.append(nn.LeakyReLU())
+        clf_layer.append(nn.Linear(num_filters, num_target_classes))
+        self.classifier = nn.Sequential(
+            *clf_layer
+        )
+        self.force_grad = False
         self.loss_module = nn.CrossEntropyLoss()
         self.metrics_train = self._create_metrics("_train")
         self.metrics_test = self._create_metrics("_test")
@@ -63,8 +77,11 @@ class SitSmartModel(L.LightningModule):
         B, C, H, W = imgs.shape
         if C != 3:
             raise ValueError(f"Expected number of channels 3, got {C}")
-        with torch.no_grad():
+        if self.force_grad:
             x = self.backbone(imgs)
+        else:
+            with torch.no_grad():
+                x = self.backbone(imgs)
         x = self.classifier(x)
         return x
 

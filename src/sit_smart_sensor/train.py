@@ -30,7 +30,7 @@ def get_loggers(log_dir):
 
 
 def train_model(cfg):
-    train_dataset, val_dataset = get_dataset(**cfg.dataset)
+    train_dataset, val_dataset = get_dataset(**cfg.dataset,train_transforms=cfg.train_transforms)
     model = SitSmartModel(**cfg.model)
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg.train.train_batch_size, shuffle=True,
                                                    num_workers=cfg.train.num_workers, pin_memory=True,

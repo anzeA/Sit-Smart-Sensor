@@ -38,7 +38,7 @@ class TestModel(unittest.TestCase):
         pred = model(inp)
         expected_shape = torch.Size([1, 3])
         self.assertEqual(pred.shape, expected_shape)
-        self.assertEqual(len(list(model.classifier)), 5 ) # 2 blocks + global average pooling + flatten + linear
+        self.assertEqual(len(list(model.classifier)), 3*2+3 ) # (2* Linear + 2*Dropout + 2*LeakyReLU) + Linear + Dropout + Flatten
 
 
 if __name__ == '__main__':

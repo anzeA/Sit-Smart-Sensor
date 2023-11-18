@@ -14,19 +14,19 @@ default_cfg = dict()
 def update_cfg(parameters):
     global default_cfg
     cfg = deepcopy(default_cfg)
-    for k in ["train_n_layers", "lr", "weight_decay", "patience", "reduce_factor"]:
+    for k in ["train_n_layers", "lr", "weight_decay", "patience", "reduce_factor","model_name","dropout_rate"]:
         cfg['model'][k] = parameters[k]
 
     for k in ["brightness", "contrast",
               "saturation",
               "hue", "rotation", "random_gray_scale"]:
-        cfg['dataset'][k] = parameters[k]
+        cfg['train_transforms'][k] = parameters[k]
     return cfg
 def _train(parameters):
     cfg = update_cfg(parameters)
 
-    cfg['save_model_dir'] = None  # don't save model
-    cfg['enable_progress_bar'] = False  # don't show progress bar
+    cfg.train['save_model_dir'] = None  # don't save model
+    cfg.train['enable_progress_bar'] = False  # don't show progress bar
 
     loss = train_model(cfg)
     return loss
@@ -42,7 +42,7 @@ def hyperparameter_search(cfg):
             {
                 "name": "lr",  # The name of the parameter.
                 "type": "range",  # The type of the parameter ("range", "choice" or "fixed").
-                "bounds": [1e-5, 1e-2],  # The bounds for range parameters.
+                "bounds": [5e-5, 1e-3],  # The bounds for range parameters.
                 "value_type": "float",
                 "log_scale": True,
             },
@@ -103,12 +103,19 @@ def hyperparameter_search(cfg):
                 "value_type": "float",
                 "log_scale": True,
             },
-            # {
-            #    "name": "model_name",  # The name of the parameter.
-            #    "type": "choice",  # The type of the parameter ("range", "choice" or "fixed").
-            #    "values": ["resnet18","resnet34","resnet50"], #The possible values for choice parameters .
-            #    "value_type": "str",
-            # },
+
+            {
+                "name": "dropout_rate",  # The name of the parameter.
+                "type": "range",  # The type of the parameter ("range", "choice" or "fixed").
+                "bounds": [0, 0.8],  # The bounds for range parameters.
+                "value_type": "float",
+            },
+            {
+                "name": "model_name",  # The name of the parameter.
+                "type": "choice",  # The type of the parameter ("range", "choice" or "fixed").
+                "values": ["resnet18","resnet34","resnet50"], #The possible values for choice parameters .
+                "value_type": "str",
+             },
             {
                 "name": "train_n_layers",  # The name of the parameter.
                 "type": "range",  # The type of the parameter ("range", "choice" or "fixed").
@@ -117,7 +124,7 @@ def hyperparameter_search(cfg):
             },
 
         ],
-        objectives={cfg.monitor: ObjectiveProperties(minimize='loss' in cfg.monitor)},
+        objectives={cfg.train.monitor: ObjectiveProperties(minimize='loss' in cfg.train.monitor)},
 
     )
 
@@ -130,16 +137,17 @@ def hyperparameter_search(cfg):
             'weight_decay': cfg.model.weight_decay,
 
             'train_n_layers': cfg.model.train_n_layers,
-            # "model_name": cfg.model.model_name,
+            "model_name": cfg.model.model_name,
             'patience': cfg.model.patience,
             'reduce_factor': cfg.model.reduce_factor,
+            "dropout_rate": cfg.model.dropout_rate,
             # data
-            'brightness': cfg.dataset.brightness,
-            'contrast': cfg.dataset.contrast,
-            'saturation': cfg.dataset.saturation,
-            'hue': cfg.dataset.hue,
-            'rotation': cfg.dataset.rotation,
-            'random_gray_scale': cfg.dataset.random_gray_scale,
+            'brightness': cfg.train_transforms.brightness,
+            'contrast': cfg.train_transforms.contrast,
+            'saturation': cfg.train_transforms.saturation,
+            'hue': cfg.train_transforms.hue,
+            'rotation': cfg.train_transforms.rotation,
+            'random_gray_scale': cfg.train_transforms.random_gray_scale,
 
         }
     )
@@ -155,7 +163,7 @@ def hyperparameter_search(cfg):
         mean, covariance = values
         print(best_parameters, mean, covariance)
         # save best parameters to json file
-        base_path = Path(cfg.log_dir)
+        base_path = Path(cfg.train.log_dir)
         dict_to_save = {"best_parameters": best_parameters, "mean": mean}
         path = "best_parameters.json"
         with open(base_path / path, "w") as f:

@@ -1,15 +1,12 @@
 import sys
-import threading
 import time
 from collections import deque
 from pathlib import Path
 from typing import Union, Tuple
 
 import cv2
-import numpy as np
 import torch
 from playsound import playsound
-from pytorch_grad_cam import EigenCAM
 from torchvision import transforms
 
 from sit_smart_sensor import SitSmartModel
@@ -19,7 +16,7 @@ from sit_smart_sensor import SitSmartModel
 def get_accelerator():
     if torch.cuda.is_available():
         return torch.device('cuda')
-    elif sys.platform == "darwin": # MacOS
+    elif sys.platform == "darwin":  # MacOS
         if torch.backends.mps.is_available():
             return torch.device('mps')
         else:
@@ -65,8 +62,10 @@ class RollingAverage:
 
 
 class Sensor:
-    def __init__(self, model: SitSmartModel, time_span: int =30, min_samples: int=10, show:bool=True, sound_path: Union[None, str, Path] =None, camera_index : int=0,
-                 explain: bool =False, size : Tuple[int,int] = (360, 640), device : str ='auto',sleep_time : int =0, **kwargs):
+    def __init__(self, model: SitSmartModel, time_span: int = 30, min_samples: int = 10, show: bool = True,
+                 sound_path: Union[None, str, Path] = None, camera_index: Union[int, None] = 0,
+                 size: Tuple[int, int] = (360, 640), device: str = 'auto', sleep_time: int = 0,
+                 **kwargs):
 
         self.time_span = time_span
         self.show = show
@@ -85,27 +84,21 @@ class Sensor:
         self.model = model
         self.model.eval()
         self.model.to(self.device)
+        self.size = size
         self.transform = transforms.Compose([transforms.ToPILImage(), transforms.Resize(size),
                                              transforms.ToTensor()])
 
-        # number of available cameras
-        available_cameras = self._get_num_cameras()
-        if len(available_cameras) == 0:
-            raise ValueError("No cameras available.")
-        if camera_index not in available_cameras:
-            raise ValueError(f"Camera index {camera_index} is not available. Available cameras are {available_cameras}")
-        self.cap = cv2.VideoCapture(camera_index)
-
-        # explain
-        self.explain = explain
-        if self.explain:
-            train_n_layers = model.train_n_layers
-
-            if train_n_layers == 0:
-                target_layers = [list(self.model.backbone.children())[-1]]
-            else:
-                target_layers = [list(self.model.classifier.children())[train_n_layers - 1]]
-            self.cam = EigenCAM(model=self.model, target_layers=target_layers, use_cuda=True)
+        if camera_index is not None:
+            try:
+                self.cap = cv2.VideoCapture(camera_index)
+            except:
+                available_cameras = self._get_num_cameras()
+                if len(available_cameras) == 0:
+                    raise ValueError("No cameras available.")
+                raise ValueError(
+                    f"Camera index {camera_index} is not available. Available cameras are {available_cameras}")
+        else:
+            self.cap = None
 
     def _get_num_cameras(self):
         index = 0
@@ -120,8 +113,20 @@ class Sensor:
             index += 1
         return arr
 
-    def run(self):
+    def _add_text_to_image(self, frame, probability, probability_avg=None):
+        for i, (k, v) in enumerate(probability.items()):
+            text = f'{k.replace("_", " ")}: {int(100 * v)}%'
+            color = (0, int(255 * v), int(255 * (1 - v)))
+            cv2.putText(frame, text, (10, 30 * (i + 1)), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
+        if probability_avg is not None:
+            text_avg = f'Score: {int(100 * probability_avg)}%'
+            color = (0, int(255 * probability_avg), int(255 * (1 - probability_avg)))
+            cv2.putText(frame, text_avg, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
+
+    def run(self):
+        if self.cap is None:
+            raise ValueError("No camera selected. Set camera_index to a valid camera index. Try with 0")
         while True:
             time_start = time.time()
             frame = self.get_image()
@@ -136,24 +141,14 @@ class Sensor:
             if probability['no_person'] < 0.25:
                 probability_avg = self.update(probability_pos)
             if self.show:
-                if self.explain:
-                    frame = self.get_explanation(preprocessed_frame)
-                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # convert to BGR for opencv
-                for i, (k, v) in enumerate(probability.items()):
-                    text = f'{k.replace("_", " ")}: {int(100 * v)}%'
-                    color = (0, int(255 * v), int(255 * (1 - v)))
-                    cv2.putText(frame, text, (10, 30 * (i + 1)), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
-                if probability_avg is not None:
-                    text_avg = f'Score: {int(100 * probability_avg)}%'
-                    color = (0, int(255 * probability_avg), int(255 * (1 - probability_avg)))
-                    cv2.putText(frame, text_avg, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
+                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # convert to BGR for opencv
+                self._add_text_to_image(frame, probability, probability_avg)
 
                 cv2.imshow('SitSmart Demo', frame)
             if probability_avg and probability_avg < 0.1 and self.sound_path is not None:
                 self.rolling_average.reset()
                 playsound(self.sound_path)
-
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -165,11 +160,56 @@ class Sensor:
         self.cap.release()
         cv2.destroyAllWindows()
 
+    def run_on_video(self, video_path: Union[str, Path], output_path: Union[str, Path, None] = None, **kwargs):
+        print('Running on video')
+        print(f'Video path: {video_path}')
+        if output_path is not None:
+            print(f'Output path: {output_path}')
+        else:
+            print('Output path is not set.')
+        video_path = Path(video_path)
+        if not video_path.exists():
+            raise FileNotFoundError(f"Video file {video_path} does not exist.")
+        cap = cv2.VideoCapture(str(video_path))
+        if not cap.isOpened():
+            raise ValueError("Error opening video file. Make sure ffmpeg is installed.")
+
+        if output_path is not None:
+            h, w = self.size
+            size = (w, h)
+            fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            out = cv2.VideoWriter(output_path, fourcc, 8., size)
+        if self.show:
+            print('Show is set to True, but it is ignored when running on video.')
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # convert to RGB
+            preprocessed_frame = self.preprocess_image(frame)
+            probability = self.predict_image(preprocessed_frame)
+
+            probability_avg = None
+            probability_pos = probability['positive'] / (probability['positive'] + probability['negative'] + 1e-9)
+            if probability['no_person'] < 0.25:
+                probability_avg = self.update(probability_pos)
+            # resize frame
+            frame = cv2.resize(frame, self.size[::-1])
+            self._add_text_to_image(frame, probability, probability_avg)
+            # frame to BGR for opencv
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
+            if output_path is not None:
+                out.write(frame)
+        if output_path is not None:
+            out.release()
+        cap.release()
+        cv2.destroyAllWindows()
+
     def update(self, new_val):
         return self.rolling_average.update(new_val)
 
     def get_image(self):
-
         ret, frame = self.cap.read()
         if not ret:
             print("Failed to grab frame.")
@@ -190,16 +230,3 @@ class Sensor:
             probability = self.model.predict_proba(frame).cpu().numpy()
 
         return {'negative': probability[0][0], 'no_person': probability[0, 1], 'positive': probability[0][2]}
-
-    def get_explanation(self, frame):
-        from pytorch_grad_cam.utils.image import show_cam_on_image
-
-        input_tensor = frame.unsqueeze(0)
-
-        grayscale_cam = self.cam(input_tensor=input_tensor)
-
-        # In this example grayscale_cam has only one image in the batch:
-        grayscale_cam = grayscale_cam[0, :]
-        frame = np.einsum('chw -> hwc', frame.numpy())
-        visualization = show_cam_on_image(frame, grayscale_cam, use_rgb=True)
-        return visualization

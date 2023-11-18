@@ -1,6 +1,6 @@
 # Image Dataset Structure
 
-This folder organizes the image dataset used by the Sit Smart Sensor project:
+This folder organizes the image dataset into three folders:
 
 - **positive**: Images depicting correct sitting posture.
 - **negative**: Images displaying incorrect sitting posture.

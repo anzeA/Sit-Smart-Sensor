@@ -26,11 +26,13 @@ def get_test_transforms(size, **kwargs):
                                transforms.ToTensor()])
 
 
-def get_dataset(root, ratio_train=0.8, seed=13, print_summary=True, **kwargs):
+def get_dataset(root,size, ratio_train=0.8, seed=13, print_summary=True, train_transforms=None):
     if ratio_train <= 0 or ratio_train >= 1:
         raise ValueError(f"ratio_train must be between 0 and 1. But it is {ratio_train}")
-    transform_train = get_train_transforms(**kwargs)
-    transform_val = get_val_transforms(**kwargs)
+    if train_transforms is None:
+        train_transforms = {}
+    transform_train = get_train_transforms(**train_transforms, size=size)
+    transform_val = get_val_transforms(size)
     dataset = datasets.ImageFolder(root=root,
                                    transform=transform_train)
     dataset_val = datasets.ImageFolder(root=root,
