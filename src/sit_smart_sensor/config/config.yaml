@@ -9,7 +9,7 @@ hydra:
     dir: .
 
 root_dir: . # Change to your project directory
-size: [360,640]# Input image size [H,W]. Image will be resized to this size before feeding to the model
+size: [360,640] # Input image size [H,W]. Image will be resized to this size before feeding to the model
 
 hyperparameter_optimization: false  # Set to True to run hyperparameter optimization
 train_model: false # Set to True to train the model
