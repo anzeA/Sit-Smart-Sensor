@@ -1,16 +1,17 @@
 import sys
 import time
 from collections import deque
+from datetime import datetime,timedelta
 from pathlib import Path
 from typing import Union, Tuple
 
 import cv2
 import torch
-from playsound import playsound
 from torchvision import transforms
 
 from sit_smart_sensor import SitSmartModel
 
+from plyer import notification
 
 # get device
 def get_accelerator():
@@ -33,6 +34,10 @@ def get_accelerator():
 class RollingAverage:
     def __init__(self, min_samples, time_span):
         self.min_samples = min_samples
+        # time_span in seconds
+        # make it timedelta
+        if isinstance(time_span, int):
+            time_span = timedelta(seconds=time_span)
         self.time_span = time_span
         self.total_sum = 0
         self.deque = deque()
@@ -43,7 +48,7 @@ class RollingAverage:
         return self.deque[0][0]
 
     def update(self, new_val):
-        current_time = time.time()
+        current_time = datetime.now()
         self.total_sum += new_val
         self.deque.append((new_val, current_time))
         # Remove elements older than time_span seconds
@@ -66,7 +71,8 @@ class Sensor:
                  sound_path: Union[None, str, Path] = None, camera_index: Union[int, None] = 0,
                  size: Tuple[int, int] = (360, 640), device: str = 'auto', sleep_time: int = 0,
                  **kwargs):
-
+        print('Got unexpected kwargs:', kwargs)
+        print('time_span:', time_span)
         self.time_span = time_span
         self.show = show
         self.sleep_time = sleep_time
@@ -148,7 +154,7 @@ class Sensor:
                 cv2.imshow('SitSmart Demo', frame)
             if probability_avg and probability_avg < 0.1 and self.sound_path is not None:
                 self.rolling_average.reset()
-                playsound(self.sound_path)
+                self.send_notification()
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -230,3 +236,15 @@ class Sensor:
             probability = self.model.predict_proba(frame).cpu().numpy()
 
         return {'negative': probability[0][0], 'no_person': probability[0, 1], 'positive': probability[0][2]}
+
+    def send_notification(self):
+        notification.notify(
+            app_name='SitSmart',
+            ticker='SitSmart',
+            title='Incorrect Posture',
+            message='You are sitting incorrectly. Please correct your posture.',
+            app_icon='assets/logo.ico',
+            timeout=10,
+            toast=True
+
+        )
