@@ -1,17 +1,17 @@
 import sys
 import time
 from collections import deque
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Union, Tuple
 
 import cv2
 import torch
+from plyer import notification
 from torchvision import transforms
 
 from sit_smart_sensor import SitSmartModel
 
-from plyer import notification
 
 # get device
 def get_accelerator():
@@ -68,18 +68,13 @@ class RollingAverage:
 
 class Sensor:
     def __init__(self, model: SitSmartModel, time_span: int = 30, min_samples: int = 10, show: bool = True,
-                 sound_path: Union[None, str, Path] = None, camera_index: Union[int, None] = 0,
+                 camera_index: Union[int, None] = 0,
                  size: Tuple[int, int] = (360, 640), device: str = 'auto', sleep_time: int = 0,
                  **kwargs):
-        print('Got unexpected kwargs:', kwargs)
-        print('time_span:', time_span)
         self.time_span = time_span
         self.show = show
         self.sleep_time = sleep_time
-        self.sound_path = Path(sound_path) if sound_path is not None else None
-        if self.sound_path is not None and not self.sound_path.exists():
-            raise FileNotFoundError(f"Sound file {self.sound_path} does not exist.")
-        self.sound_path = str(self.sound_path) if self.sound_path is not None else None
+
         if device == 'auto':
             self.device = get_accelerator()
             print(f"Using device {self.device}")
@@ -147,12 +142,11 @@ class Sensor:
             if probability['no_person'] < 0.25:
                 probability_avg = self.update(probability_pos)
             if self.show:
-
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # convert to BGR for opencv
                 self._add_text_to_image(frame, probability, probability_avg)
 
                 cv2.imshow('SitSmart Demo', frame)
-            if probability_avg and probability_avg < 0.1 and self.sound_path is not None:
+            if probability_avg and probability_avg < 0.1:
                 self.rolling_average.reset()
                 self.send_notification()
 

@@ -58,7 +58,6 @@ Replace `PATH_TO_ROOT_DIR` with the desired path to the root directory.
 
 | Parameter Name | Description                                                                                                            |
 |----------------|------------------------------------------------------------------------------------------------------------------------|
-| `sound_path`   | Path to the sound file played upon detecting bad posture. Supports mp3 and wav formats. If unspecified, no sound will be played. |
 | `model_path`   | Location of the model checkpoint file.                                                                                 |
 | `time_span`    | Duration in seconds of sustained bad posture to trigger an alert.                                                      |
 | `min_samples`  | Minimum number of posture samples within the duration to trigger an alert.                                             |

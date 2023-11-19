@@ -45,7 +45,6 @@ model:
   train_n_layers: 1 # Number of hidden layers to train. 0 means train only classification layer
   dropout_rate: 0.19791567102074625
 run:
-  sound_path: ${root_dir}/assets/sound.wav # Path to sound file to be played when bad posture is detected. Supported formats are mp3 and wav. If none is provided, no sound will be played
   size: ${size}
   model_path: ${root_dir}/models/resnet50.ckpt  # Path to model checkpoint
   time_span: 30 # Time span in seconds for which the posture should be bad to trigger an alert
