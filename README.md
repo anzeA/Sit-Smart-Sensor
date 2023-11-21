@@ -37,7 +37,7 @@ if you are having any problems with pytorch installation, try to install it firs
     ```bash
     pip install -e .
     ```
-
+5. Download the model checkpoints from [Google drive](https://drive.google.com/file/d/1H-NY9e6ptH6DLUVZJJ1-IWsJpSmMXXG-/view?usp=sharing) and unzip them in the `models` directory.
 ## Usage
 
 To run Sit Smart Sensor, execute the following command from the root directory:
@@ -65,13 +65,13 @@ Replace `PATH_TO_ROOT_DIR` with the desired path to the root directory.
 | `camera_index` | Index of the camera to use.                                                                                            |
 | `sleep_time`   | Duration in seconds to pause between each frame processing. Use `0` to disable. Useful for CPU-based systems.          |
  | `device`        | Device to use. Valid values are `auto`, `cpu`, `cuda`, `mps`                                                           |
-
+ 
 ## Released models
 Within the `models` directory, I've included three models available for testing the application. Each model has demonstrated accuracy rates exceeding 90% on my personal dataset.
 
 ## Note on Dataset Availability
 
-The dataset used for development is not being released as it mostly contains only images of me and my friends. However, you can create your own dataset by following the instructions below.
+The dataset used for development is not being released as it only contains images of me and my friends. However, you can create your own dataset by following the instructions below.
 
 ### Tips and Tricks for Building Your Own Dataset
 
@@ -81,7 +81,6 @@ The dataset used for development is not being released as it mostly contains onl
 - Ensure to have a variety of lighting conditions.
 - Capture various facial expressions.
 - Capture various clothing styles.
-- Monitor model training with tensorboard!
 - Don't be afraid to start building your own dataset! The more images you have, the better the model will perform.
 - Images are easy to collect as you can collect them while working on your computer.
 - About 100 images per class should be enough to train a model with accuracy over 90%.
