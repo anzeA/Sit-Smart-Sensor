@@ -21,7 +21,7 @@ To install Sit Smart Sensor, follow these steps:
     git clone https://github.com/anzeA/Sit-Smart-Sensor.git
     cd Sit-Smart-Sensor
     ```
-3. Create virtual environment:
+2. Create virtual environment:
     ```bash
     python -m venv venv
     ```
@@ -29,15 +29,15 @@ To install Sit Smart Sensor, follow these steps:
     ```bash
     conda create -n venv python=3.11
     ```
-if you are having any problems with pytorch installation, try to install it first using conda:
+   if you are having any problems with pytorch installation, try to install it first using conda:
    ```bash
     conda install pytorch torchvision pytorch-cuda=12.1 -c pytorch -c nvidia
    ```
-4. Install the project using pip:
+3. Install the project using pip:
     ```bash
     pip install -e .
     ```
-5. Download the model checkpoints from [Google drive](https://drive.google.com/file/d/1H-NY9e6ptH6DLUVZJJ1-IWsJpSmMXXG-/view?usp=sharing) and unzip them in the `models` directory.
+4. Download the model checkpoints from [Google drive](https://drive.google.com/file/d/1H-NY9e6ptH6DLUVZJJ1-IWsJpSmMXXG-/view?usp=sharing) and unzip them in the `models` directory.
 ## Usage
 
 To run Sit Smart Sensor, execute the following command from the root directory:
