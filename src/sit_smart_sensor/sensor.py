@@ -7,11 +7,10 @@ from typing import Union, Tuple
 
 import cv2
 import torch
-from plyer import notification
 from torchvision import transforms
 
 from sit_smart_sensor import SitSmartModel
-
+from notifypy import Notify
 
 # get device
 def get_accelerator():
@@ -113,7 +112,6 @@ class Sensor:
             cap.release()
             index += 1
         return arr
-
     def _add_text_to_image(self, frame, probability, probability_avg=None):
         for i, (k, v) in enumerate(probability.items()):
             text = f'{k.replace("_", " ")}: {int(100 * v)}%'
@@ -154,7 +152,8 @@ class Sensor:
                 break
             time_end = time.time()
             time_elapsed = time_end - time_start
-            print(f"Time elapsed: {time_elapsed:.2f} seconds")
+            score_str = f"Score: {int(100 * probability_avg)}%" if probability_avg else f'Score is not yet available. Currently have {len(self.rolling_average.deque)} out of the required {self.rolling_average.min_samples} samples.'
+            print(f"Time elapsed: {time_elapsed:.2f} seconds. FPS: {1 / time_elapsed:.2f}. {score_str}")
             if self.sleep_time > 0:
                 time.sleep(self.sleep_time)
         self.cap.release()
@@ -232,13 +231,9 @@ class Sensor:
         return {'negative': probability[0][0], 'no_person': probability[0, 1], 'positive': probability[0][2]}
 
     def send_notification(self):
-        notification.notify(
-            app_name='SitSmart',
-            ticker='SitSmart',
-            title='Incorrect Posture',
-            message='You are sitting incorrectly. Please correct your posture.',
-            app_icon='assets/logo.ico',
-            timeout=10,
-            toast=True
-
-        )
+        notification = Notify(disable_logging=True)
+        notification.application_name = 'Sit Smart Sensor'
+        notification.title = 'Incorrect Posture'
+        notification.message = 'You are sitting incorrectly. Please correct your posture.'
+        notification.icon ='assets/logo.ico'
+        notification.send(block=False)
