@@ -14,7 +14,7 @@ torch.set_float32_matmul_precision('high')
 
 class SitSmartModel(L.LightningModule):
     def __init__(self, train_n_layers: int = 1, model_name: str = 'resnet34', lr: float = 1e-3,
-                 weight_decay: float = 1e-6, patience: int = 5, reduce_factor: float = 0.5,dropout_rate:float=0., **kwargs):
+                 weight_decay: float = 1e-6, patience: int = 5, reduce_factor: float = 0.5,dropout_rate:float=0.,weights='DEFAULT', **kwargs):
         super().__init__()
         # check types
         assert isinstance(train_n_layers, int), f"train_n_layers must be an integer, but got {type(train_n_layers)}"
@@ -32,11 +32,11 @@ class SitSmartModel(L.LightningModule):
         self.reduce_factor = reduce_factor
         self.model_name = model_name
         if model_name == 'resnet18':
-            self.backbone = models.resnet18(weights='DEFAULT')
+            self.backbone = models.resnet18(weights=weights)
         elif model_name == 'resnet34':
-            self.backbone = models.resnet34(weights='DEFAULT')
+            self.backbone = models.resnet34(weights=weights)
         elif model_name == 'resnet50':
-            self.backbone = models.resnet50(weights='DEFAULT')
+            self.backbone = models.resnet50(weights=weights)
         else:
             raise ValueError(f"model_name {model_name} not supported. Only resnet18, resnet34 and resnet50 are supported.")
 
