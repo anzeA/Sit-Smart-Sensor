@@ -37,7 +37,7 @@ To install Sit Smart Sensor, follow these steps:
     ```bash
     pip install -e .
     ```
-4. Download the model checkpoints from [Google drive](https://drive.google.com/file/d/1H-NY9e6ptH6DLUVZJJ1-IWsJpSmMXXG-/view?usp=sharing) and unzip them in the `models` directory.
+4. Download the model checkpoints from [Google drive](https://drive.google.com/file/d/1uwF3RvZLCW0FoZ4P0PgBtW7JRWSlVGDI/view?usp=sharing) and unzip them in the `models` directory.
 ## Usage
 
 To run Sit Smart Sensor, execute the following command from the root directory:
