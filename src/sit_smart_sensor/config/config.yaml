@@ -19,37 +19,35 @@ dataset:
   print_summary: false
 train_transforms:
   # Parameters for random data augmentation during training
-  rotation: 1
-  brightness: 0.13421751726418732
-  contrast: 0.004651633836328983
-  saturation: 0.17556343339383604
-  hue: 0.046270601078867914
-  random_gray_scale: 0.09155612904578447
+  brightness:  0.11388021369311191
+  contrast: 0.05647132194565846
+  saturation: 0.08707688195327586
+  hue: 0.14190822706036743
+  random_gray_scale: 0.10354352211071055
 train:
-  train_batch_size: 16
-  val_batch_size: 32
-  num_workers: 4 # Number of workers for data loading
+  train_batch_size: 32
+  val_batch_size: 64
+  num_workers: 8 # Number of workers for data loading
   log_dir: ${root_dir}\logs # Directory to save logs
   save_model_dir: ${root_dir}\models  # Directory to save model checkpoints
   enable_progress_bar: true
   monitor: val_loss  # Metric to monitor for early stopping.
+  patience: 5  # Number of epochs to wait for early stopping
   trainer:
     max_epochs: 100
     log_every_n_steps: 5
 model:
-  lr: 0.00044385329608533753
-  weight_decay: 0.07105427971339849
-  model_name: resnet50 # Model name. Valid values are resnet18, resnet34, resnet50
-  patience: 8  # Number of epochs to wait before reducing learning rate. And 2*number of epochs to wait before early stopping
-  reduce_factor: 0.24675830426811984 # Factor by which learning rate will be reduced
-  train_n_layers: 1 # Number of hidden layers to train. 0 means train only classification layer
-  dropout_rate: 0.19791567102074625
+  lr: 0.00032114631562197345
+  weight_decay: 0.0001032884773774556
+  model_name: resnet34 # Model name. Valid values are resnet18, resnet34, resnet50
+  dropout_rate: 0.32632336954383523
 run:
   size: ${size}
-  model_path: ${root_dir}/models/resnet50.ckpt  # Path to model checkpoint
+  model_path: ${root_dir}/models/resnet34.ckpt  # Path to model checkpoint
   time_span: 30 # Time span in seconds for which the posture should be bad to trigger an alert
   min_samples: 100 # Minimum number of samples in the time span for which the posture should be bad to trigger an alert
   show: true # Set to True to show the video feed
   camera_index: 0 # Index of the camera to use. 0 means use the default camera
   sleep_time: 0 # Time in seconds to sleep between each frame. Set to 0 to disable. This is useful when running on CPU
   device: auto  # Device to use. Valid values are auto, cpu, cuda, mps.
+  explain: False # Set to True to show the explanation for the prediction

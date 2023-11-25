@@ -65,7 +65,7 @@ Replace `PATH_TO_ROOT_DIR` with the desired path to the root directory.
 | `camera_index` | Index of the camera to use.                                                                                            |
 | `sleep_time`   | Duration in seconds to pause between each frame processing. Use `0` to disable. Useful for CPU-based systems.          |
  | `device`        | Device to use. Valid values are `auto`, `cpu`, `cuda`, `mps`                                                           |
-
+| `explain`      | Set to `True` to display the explanation of the prediction; otherwise, set to `False`.                                 |
 
 ## Note on Dataset Availability
 

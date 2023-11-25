@@ -41,7 +41,7 @@ def train_model(cfg):
     mode = 'max'
     if 'loss' in cfg.train.monitor:
         mode = 'min'
-    early_stopping = EarlyStopping(monitor=cfg.train.monitor, patience=cfg.model.patience * 2, mode=mode)
+    early_stopping = EarlyStopping(monitor=cfg.train.monitor, patience=cfg.train.patience, mode=mode)
     callbacks = [early_stopping]
 
     loggers, logdir = get_loggers(cfg.train.log_dir)

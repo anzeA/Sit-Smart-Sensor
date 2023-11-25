@@ -6,11 +6,16 @@ from pathlib import Path
 from typing import Union, Tuple
 
 import cv2
+import numpy as np
 import torch
+from notifypy import Notify
+from pytorch_grad_cam import LayerCAM
+from pytorch_grad_cam.utils.image import show_cam_on_image
+from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from torchvision import transforms
 
 from sit_smart_sensor import SitSmartModel
-from notifypy import Notify
+
 
 # get device
 def get_accelerator():
@@ -67,7 +72,7 @@ class RollingAverage:
 
 class Sensor:
     def __init__(self, model: SitSmartModel, time_span: int = 30, min_samples: int = 10, show: bool = True,
-                 camera_index: Union[int, None] = 0,
+                 camera_index: Union[int, None] = 0,explain: bool = False,
                  size: Tuple[int, int] = (360, 640), device: str = 'auto', sleep_time: int = 0,
                  **kwargs):
         self.time_span = time_span
@@ -87,6 +92,12 @@ class Sensor:
         self.size = size
         self.transform = transforms.Compose([transforms.ToPILImage(), transforms.Resize(size),
                                              transforms.ToTensor()])
+        self.explain = explain
+        if self.explain:
+            if not show:
+                raise ValueError("explain is set to True, but show is set to False. Set show to True.")
+            self.cam = LayerCAM(model=self.model, target_layers=list(self.model.backbone_train.children()),
+                                use_cuda=torch.cuda.is_available())
 
         if camera_index is not None:
             try:
@@ -112,6 +123,7 @@ class Sensor:
             cap.release()
             index += 1
         return arr
+
     def _add_text_to_image(self, frame, probability, probability_avg=None):
         for i, (k, v) in enumerate(probability.items()):
             text = f'{k.replace("_", " ")}: {int(100 * v)}%'
@@ -140,6 +152,8 @@ class Sensor:
             if probability['no_person'] < 0.25:
                 probability_avg = self.update(probability_pos)
             if self.show:
+                frame = self.get_explanation(preprocessed_frame)
+
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # convert to BGR for opencv
                 self._add_text_to_image(frame, probability, probability_avg)
 
@@ -147,6 +161,7 @@ class Sensor:
             if probability_avg and probability_avg < 0.1:
                 self.rolling_average.reset()
                 self.send_notification()
+                self.rolling_average.reset()
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -175,7 +190,7 @@ class Sensor:
 
         if output_path is not None:
             h, w = self.size
-            size = (w, h)
+            size = (w, h) if not self.explain else (2 * w, h)
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
             out = cv2.VideoWriter(output_path, fourcc, 8., size)
         if self.show:
@@ -192,8 +207,12 @@ class Sensor:
             probability_pos = probability['positive'] / (probability['positive'] + probability['negative'] + 1e-9)
             if probability['no_person'] < 0.25:
                 probability_avg = self.update(probability_pos)
-            # resize frame
             frame = cv2.resize(frame, self.size[::-1])
+            if self.explain:
+                explain_frame = self.get_explanation(preprocessed_frame)
+                frame = np.concatenate((frame, explain_frame), axis=1)
+            # resize frame
+
             self._add_text_to_image(frame, probability, probability_avg)
             # frame to BGR for opencv
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
@@ -235,5 +254,17 @@ class Sensor:
         notification.application_name = 'Sit Smart Sensor'
         notification.title = 'Incorrect Posture'
         notification.message = 'You are sitting incorrectly. Please correct your posture.'
-        notification.icon ='assets/logo.ico'
+        notification.icon = 'assets/logo.ico'
         notification.send(block=False)
+
+    def get_explanation(self, frame):
+
+        input_tensor = frame.unsqueeze(0)
+        targets = [ClassifierOutputTarget(2)]
+        grayscale_cam = self.cam(input_tensor=input_tensor, targets=targets)
+
+        # In this example grayscale_cam has only one image in the batch:
+        grayscale_cam = grayscale_cam[0, :]
+        frame = np.einsum('chw -> hwc', frame.numpy())
+        visualization = show_cam_on_image(frame, grayscale_cam, use_rgb=True)
+        return visualization
