@@ -152,8 +152,11 @@ class Sensor:
             if probability['no_person'] < 0.25:
                 probability_avg = self.update(probability_pos)
             if self.show:
-                frame = self.get_explanation(preprocessed_frame)
 
+                frame_explain = self.get_explanation(preprocessed_frame)
+                preprocessed_frame = np.einsum('chw -> hwc', preprocessed_frame.numpy())
+                preprocessed_frame = (preprocessed_frame * 255).astype(np.uint8)
+                frame = np.concatenate((preprocessed_frame, frame_explain), axis=1)
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # convert to BGR for opencv
                 self._add_text_to_image(frame, probability, probability_avg)
 
