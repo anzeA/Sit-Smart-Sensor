@@ -147,16 +147,17 @@ class Sensor:
             preprocessed_frame = self.preprocess_image(frame)
             probability = self.predict_image(preprocessed_frame)
 
-            probability_avg = None
             probability_pos = probability['positive'] / (probability['positive'] + probability['negative'] + 1e-9)
             if probability['no_person'] < 0.25:
                 probability_avg = self.update(probability_pos)
+            else:
+                probability_avg = None
             if self.show:
-
-                frame_explain = self.get_explanation(preprocessed_frame)
-                preprocessed_frame = np.einsum('chw -> hwc', preprocessed_frame.numpy())
-                preprocessed_frame = (preprocessed_frame * 255).astype(np.uint8)
-                frame = np.concatenate((preprocessed_frame, frame_explain), axis=1)
+                if self.explain:
+                    frame_explain = self.get_explanation(preprocessed_frame)
+                    preprocessed_frame = np.einsum('chw -> hwc', preprocessed_frame.numpy())
+                    preprocessed_frame = (preprocessed_frame * 255).astype(np.uint8)
+                    frame = np.concatenate((preprocessed_frame, frame_explain), axis=1)
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # convert to BGR for opencv
                 self._add_text_to_image(frame, probability, probability_avg)
 
@@ -170,7 +171,12 @@ class Sensor:
                 break
             time_end = time.time()
             time_elapsed = time_end - time_start
-            score_str = f"Score: {int(100 * probability_avg)}%" if probability_avg else f'Score is not yet available. Currently have {len(self.rolling_average.deque)} out of the required {self.rolling_average.min_samples} samples.'
+            if probability_avg is None and len(self.rolling_average.deque) < self.rolling_average.min_samples:
+                score_str = f'Score is not yet available. Currently have {len(self.rolling_average.deque)} out of the required {self.rolling_average.min_samples} samples.'
+            elif probability_avg is None:
+                score_str = 'Score is not available, because no person is detected.'
+            else:
+                score_str = f"Score: {int(100 * probability_avg)}%"
             print(f"Time elapsed: {time_elapsed:.2f} seconds. FPS: {1 / time_elapsed:.2f}. {score_str}")
             if self.sleep_time > 0:
                 time.sleep(self.sleep_time)
