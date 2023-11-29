@@ -51,3 +51,4 @@ run:
   sleep_time: 0 # Time in seconds to sleep between each frame. Set to 0 to disable. This is useful when running on CPU
   device: auto  # Device to use. Valid values are auto, cpu, cuda, mps.
   explain: False # Set to True to show the explanation for the prediction
+  icon_path: ${root_dir}/assets/logo.ico

@@ -73,11 +73,14 @@ class RollingAverage:
 class Sensor:
     def __init__(self, model: SitSmartModel, time_span: int = 30, min_samples: int = 10, show: bool = True,
                  camera_index: Union[int, None] = 0,explain: bool = False,
-                 size: Tuple[int, int] = (360, 640), device: str = 'auto', sleep_time: int = 0,
+                 size: Tuple[int, int] = (360, 640), device: str = 'auto', sleep_time: int = 0,icon_path: str = None,
                  **kwargs):
         self.time_span = time_span
         self.show = show
         self.sleep_time = sleep_time
+        self.icon_path = Path(icon_path) if icon_path is not None else None
+        if self.icon_path is not None and (not self.icon_path.exists()):
+            raise FileNotFoundError(f"Icon file {self.icon_path} does not exist.")
 
         if device == 'auto':
             self.device = get_accelerator()
@@ -263,7 +266,7 @@ class Sensor:
         notification.application_name = 'Sit Smart Sensor'
         notification.title = 'Incorrect Posture'
         notification.message = 'You are sitting incorrectly. Please correct your posture.'
-        notification.icon = 'assets/logo.ico'
+        notification.icon = self.icon_path
         notification.send(block=False)
 
     def get_explanation(self, frame):
